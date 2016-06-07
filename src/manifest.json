@@ -1,0 +1,23 @@
+{
+    "manifest_version": 2,
+    "name": "Browsing Costs",
+    "description": "Productivity tools to help user not go to waste-of-time sites.",
+    "version": "0.1",
+    "browser_action": {
+        "default_icon": "action/icon.png",
+        "default_popup": "action/popup.html",
+        "default_title": "Add site as expense"
+    },
+    "background": {
+        "scripts": ["background/trackSpending.js"],
+        "persistent": false
+    },
+    "options_ui": {
+        "page": "options/options.html",
+        "chrome_style": true
+    },
+    "permissions": [
+        "tabs",
+        "storage"
+    ]
+}
