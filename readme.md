@@ -1,4 +1,4 @@
-# Fees and Dividends
+# Browsing Costs
 
 Chrome extension where you gain currency for not going to various user-selected
 sites, and lose that currency while visiting.
