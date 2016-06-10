@@ -1,0 +1,26 @@
+{
+  "name": "browsing_costs",
+  "version": "0.0.1",
+  "description": "Chrome extension for cultivating site-browsing habits.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ksiondag/browsing_costs.git"
+  },
+  "keywords": [
+    "chrome",
+    "extension",
+    "site-blocker",
+    "gamification",
+    "game"
+  ],
+  "author": "Silent Kat",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ksiondag/browsing_costs/issues"
+  },
+  "homepage": "https://github.com/ksiondag/browsing_costs#readme"
+}
