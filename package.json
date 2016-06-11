@@ -23,10 +23,6 @@
     "url": "https://github.com/ksiondag/browsing_costs/issues"
   },
   "homepage": "https://github.com/ksiondag/browsing_costs#readme",
-  "dependencies": {
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2"
-  },
   "devDependencies": {
     "babel-plugin-transform-react-jsx": "^6.8.0",
     "gulp": "^3.9.1",
