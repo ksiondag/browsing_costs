@@ -8,7 +8,11 @@ gulp.task('default', () => {
             plugins: ['transform-react-jsx']
         }))
         .pipe(gulp.dest('bin'));
-    return gulp.src(['src/**/*.js', 'src/**/*.html', 'src/manifest.json'])
+
+    gulp.src(['src/**/*.js'])
+        .pipe(gulp.dest('bin'));
+
+    return gulp.src(['src/**/*.html', 'src/manifest.json', 'src/**/*.png'])
         .pipe(gulp.dest('bin'));
 });
 

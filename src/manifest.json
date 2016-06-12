@@ -17,7 +17,7 @@
         "chrome_style": true
     },
     "permissions": [
-        "tabs",
-        "storage"
+        "storage",
+        "tabs"
     ]
 }
