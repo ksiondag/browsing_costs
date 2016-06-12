@@ -39,7 +39,7 @@ const SiteForm = React.createClass({
         this.setState({value: event.target.value});
     },
     submitUrl () {
-        this.props.newSite(this.state.value);
+        shared.newSite(this.state.value);
         this.setState(this.getInitialState());
     },
     enterCheck (event) {
@@ -70,7 +70,7 @@ const SiteBox = React.createClass({
             <div className='siteBox'>
                 <h1>Premium Sites</h1>
                 <SiteList premiumSites={this.props.premiumSites} />
-                <SiteForm newSite={this.props.newSite} />
+                <SiteForm />
             </div>
         );
     }
@@ -91,55 +91,12 @@ const OptionsBox = React.createClass({
     getInitialState () {
         return {
             premiumSites: [],
-            money: '',
-            newSite: () => null
+            money: ''
         }
     },
     componentDidMount () {
-        console.log('Fetching state from chrome storage');
-        chrome.storage.sync.get(null, (items) => {
-            let id;
-
-            this.setState({
-                newSite: (siteUrl) => {
-                    let exists = this.state.premiumSites.some((site) => {
-                        return site.url === siteUrl;
-                    });
-
-                    if (exists) {
-                        return;
-                    }
-
-                    let siteId = id;
-                    id += 1;
-                    let updatedSites = this.state.premiumSites.slice();
-                    updatedSites.push({id: siteId, url: siteUrl});
-
-                    chrome.storage.sync.set({premiumSites: updatedSites});
-                    // TODO:
-                    // This is a proof of implementation
-                    // Remove/update with new money system
-                    chrome.storage.sync.set({money: this.state.money + 1});
-                }
-            });
-
-            if (Object.keys(items).indexOf('premiumSites') === -1) {
-                console.log('Initializing premium sites list');
-                chrome.storage.sync.set({premiumSites: []});
-                items.premiumSites = [];
-            }
-
-            if (Object.keys(items).indexOf('money') === -1) {
-                console.log('Initializing money to zero');
-                chrome.storage.sync.set({money: 0});
-                items.money = 0;
-            }
-            if (items.premiumSites.length === 0) {
-                id = 1;
-            } else {
-                id = items.premiumSites.slice(-1)[0].id + 1;
-            }
-
+        console.log('Fetching state from shared fetching');
+        shared.get(null, (items) => {
             Object.keys(items).filter(function (key) {
                 return ['premiumSites', 'money'].some(
                     (check) => check === key
@@ -149,11 +106,7 @@ const OptionsBox = React.createClass({
             });
         });
 
-        chrome.storage.onChanged.addListener((changes, areaName) => {
-            if (areaName !== 'sync') {
-                return;
-            }
-
+        shared.onChanged((changes) => {
             Object.keys(changes).forEach((key) => {
                 if (changes[key].newValue === undefined) {
                     return;
@@ -170,7 +123,6 @@ const OptionsBox = React.createClass({
                 />
                 <SiteBox
                     premiumSites={this.state.premiumSites}
-                    newSite={this.state.newSite}
                 />
             </div>
         );
