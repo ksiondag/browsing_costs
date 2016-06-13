@@ -9,7 +9,7 @@
         "default_title": "Add site as expense"
     },
     "background": {
-        "scripts": ["background/trackSpending.js"],
+        "scripts": ["shared.js", "background/trackSpending.js"],
         "persistent": false
     },
     "options_ui": {

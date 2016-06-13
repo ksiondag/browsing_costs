@@ -33,7 +33,7 @@ const SiteList = React.createClass({
 
 const SiteForm = React.createClass({
     getInitialState () {
-        return {value: 'http://www.example.com'};
+        return {value: 'www.example.com'};
     },
     handleChange (event) {
         this.setState({value: event.target.value});
@@ -94,8 +94,7 @@ const OptionsBox = React.createClass({
             money: ''
         }
     },
-    componentDidMount () {
-        console.log('Fetching state from shared fetching');
+    setStateFromShared () {
         shared.get(null, (items) => {
             Object.keys(items).filter(function (key) {
                 return ['premiumSites', 'money'].some(
@@ -105,14 +104,14 @@ const OptionsBox = React.createClass({
                 this.setState({[key]: items[key]});
             });
         });
+    },
+    componentDidMount () {
+        // Options mounted. Fetching state from shared fetching
+        this.setStateFromShared();
 
-        shared.onChanged((changes) => {
-            Object.keys(changes).forEach((key) => {
-                if (changes[key].newValue === undefined) {
-                    return;
-                }
-                this.setState({[key]: changes[key].newValue});
-            });
+        shared.onChanged(() => {
+            // Local storage changes, updating options render
+            this.setStateFromShared();
         });
     },
     render () {
