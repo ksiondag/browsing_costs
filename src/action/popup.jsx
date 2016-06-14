@@ -33,11 +33,10 @@ const SiteBox = React.createClass({
         return {isPremiumSite: true};
     },
     setStateFromShared () {
-        shared.get('premiumSites', (items) => {
-            shared.getCurrentTabHost((url) => {
-                const isPremiumSite = items.premiumSites.some((site) => {
-                    return site.url === url;
-                });
+        shared.getCurrentTabHost((host) => {
+            // TODO 2016/06/13 Silent Kat
+            // This setup is hacky, I remove the protocol, need to add one
+            shared.isPremiumSite('fake://' + host, (isPremiumSite) => {
                 this.setState({isPremiumSite: isPremiumSite});
             });
         });

@@ -16,8 +16,21 @@
         "page": "options/options.html",
         "chrome_style": true
     },
+    "content_scripts": [
+        {
+            "matches": ["*://*/*"],
+            "js": [
+                "lib/react-15.1.0.js",
+                "lib/react-dom-15.1.0.js",
+                "content.js"
+            ],
+            "run_at": "document_start"
+
+        }
+    ],
     "permissions": [
         "storage",
-        "tabs"
+        "tabs",
+        "*://*/*"
     ]
 }

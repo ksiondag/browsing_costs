@@ -102,6 +102,14 @@ const shared = (() => {
                 chrome.storage.sync.set({money: items.money - 1}, callback);
             });
         },
+        isPremiumSite: function (url, callback) {
+            this.get('premiumSites', (items) => {
+                const isPremiumSite = items.premiumSites.some((site) => {
+                    return site.url === host(url);
+                });
+                callback(isPremiumSite);
+            });
+        },
         get (keys, callback) {
             initialize(() => {
                 chrome.storage.sync.get(keys, callback);
