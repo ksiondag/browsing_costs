@@ -2,7 +2,7 @@
 
 const AddBox = React.createClass({
     submitUrl () {
-        shared.newSite(this.props.url);
+        shared.newSite(this.props.url, shared.paymentBlock);
     },
     render () {
         return (
@@ -15,7 +15,7 @@ const AddBox = React.createClass({
 
 const RemoveBox = React.createClass({
     removeUrl () {
-        shared.removeSite(this.props.url);
+        shared.removeSite(this.props.url, shared.freeUrl);
     },
     render () {
         return (

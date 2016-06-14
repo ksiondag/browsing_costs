@@ -139,6 +139,41 @@ const shared = (() => {
 
                 callback(host(url));
             });
+        },
+        paymentBlock () {
+            chrome.tabs.query({}, function (tabs) {
+                tabs.forEach((tab) => {
+                    shared.isPremiumSite(tab.url, (isPremiumSite) => {
+                        chrome.alarms.get('endBreak', (alarm) => {
+                            if (!isPremiumSite
+                                || (alarm
+                                    && alarm.scheduledTime - Date.now() > 1000
+                                )
+                            ) {
+                                return;
+                            }
+                            const message = {
+                                paymentBlock: true
+                            };
+                            chrome.tabs.sendMessage(tab.id, message);
+                        });
+                    });
+                });
+            });
+        },
+        freeUrl () {
+            chrome.tabs.query({}, function (tabs) {
+                tabs.forEach((tab) => {
+                    shared.isPremiumSite(tab.url, (isPremiumSite) => {
+                        const message = {
+                            freeUrl: true
+                        };
+                        if (!isPremiumSite) {
+                            chrome.tabs.sendMessage(tab.id, message);
+                        }
+                    });
+                });
+            });
         }
     };
 })();
