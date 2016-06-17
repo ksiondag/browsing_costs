@@ -12,7 +12,11 @@ gulp.task('default', () => {
     gulp.src(['src/**/*.js'])
         .pipe(gulp.dest('bin'));
 
-    return gulp.src(['src/**/*.html', 'src/manifest.json', 'src/**/*.png'])
+    return gulp.src([
+        'src/**/*.html',
+        'src/manifest.json',
+        'src/**/*.png', 'src/**/*.css'
+    ])
         .pipe(gulp.dest('bin'));
 });
 

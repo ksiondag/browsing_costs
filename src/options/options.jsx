@@ -1,10 +1,56 @@
 'use strict';
 
+const SiteCost = React.createClass({
+    decrement () {
+        shared.decrement(this.props.site.url);
+    },
+    increment () {
+        shared.increment(this.props.site.url);
+    },
+    render () {
+        return (
+            <span>
+                <button
+                    className='premiumSiteCost-decrement'
+                    onClick={this.decrement}
+                >
+                    -
+                </button>
+                <span className='premiumSiteCost-value'>
+                    {this.props.site.minCost}
+                </span>
+                <button
+                    className='premiumSiteCost-increment'
+                    onClick={this.increment}
+                >
+                    +
+                </button>
+            </span>
+        );
+    }
+});
+
+// TODO
+const SiteRemove = React.createClass({
+    render () {
+        return (
+            <button className='premiumSiteRemove-button'>
+                Remove (-{this.props.site.minCost})
+            </button>
+        );
+    }
+});
+
 const PremiumSite = React.createClass({
     render () {
         return (
-            <div className='premiumSite'>
-                {this.props.children}
+            <div className='premiumSiteRow'>
+                <span className='premiumSiteArea'>
+                    {this.props.site.url}
+                </span>
+                <span className='premiumSiteCost'>
+                    <SiteCost site={this.props.site} />
+                </span>
             </div>
         );
     }
@@ -16,9 +62,7 @@ const SiteList = React.createClass({
         if (this.props.premiumSites) {
             sites = this.props.premiumSites.map(function (site) {
                 return (
-                    <PremiumSite key={site.id}>
-                        {site.url}
-                    </PremiumSite>
+                    <PremiumSite key={site.id} site={site} />
                 );
             });
         }
@@ -70,7 +114,6 @@ const SiteBox = React.createClass({
             <div className='siteBox'>
                 <h1>Premium Sites</h1>
                 <SiteList premiumSites={this.props.premiumSites} />
-                <SiteForm />
             </div>
         );
     }

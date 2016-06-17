@@ -12,14 +12,23 @@ div.style.height = '100%';
 div.style.backgroundColor = 'white';
 
 const revealPaymentBox = function () {
+    if (div.parentNode) {
+        // Already revealed
+        return;
+    }
     Array.from(document.body.children).forEach(function (child) {
         child.style.visibility = 'hidden';
     });
     document.body.appendChild(div);
     html.style.visibility = '';
+    div.style.visibility = '';
 };
 
 const hidePaymentBox = function () {
+    if (!div.parentNode) {
+        // Already hidden
+        return;
+    }
     document.body.removeChild(div);
     Array.from(document.body.children).forEach(function (child) {
         child.style.visibility = '';
@@ -40,7 +49,7 @@ chrome.runtime.sendMessage({checkTabUrl: true}, function (response) {
 });
 
 chrome.runtime.onMessage.addListener(function (request) {
-    if (!request.freeUrl) {
+    if (!request.unlock) {
         return false;
     }
 
@@ -49,7 +58,7 @@ chrome.runtime.onMessage.addListener(function (request) {
 });
 
 chrome.runtime.onMessage.addListener(function (request) {
-    if (!request.paymentBlock) {
+    if (!request.lock) {
         return false;
     }
 
@@ -59,30 +68,40 @@ chrome.runtime.onMessage.addListener(function (request) {
 
 const PaymentButton = React.createClass({
     pay () {
-        chrome.runtime.sendMessage({spending: true}, function (response) {
-            if (response.success) {
-                hidePaymentBox();
-            }
-        });
+        chrome.runtime.sendMessage({cost: this.props.cost});
     },
     render () {
         return (
-            <button onClick={this.pay}>
-                Pay to use site for 5 minutes
+            <button className='paymentbox-button' onClick={this.pay}>
+                Pay {this.props.cost} to use site for 5 minutes
             </button>
         );
     }
 });
 
 const PaymentBox = React.createClass({
+    getInitialState () {
+        return {
+            url: area.host(window.location.href),
+            cost: 1
+        }
+    },
+    componentDidMount () {
+        chrome.runtime.sendMessage({siteState: true}, (response) => {
+            if (!response) {
+                return;
+            }
+            this.setState(response);
+        });
+    },
     render () {
         return (
-            <div>
-                <div>
-                    This is a premium site.
+            <div className='paymentbox'>
+                <div className='paymentbox-description'>
+                    {this.state.url} is a premium site.
                 </div>
                 <div>
-                    <PaymentButton />
+                    <PaymentButton cost={this.state.cost} />
                 </div>
             </div>
         );
@@ -93,3 +112,4 @@ ReactDOM.render(
     <PaymentBox />,
     div
 );
+

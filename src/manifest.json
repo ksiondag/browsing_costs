@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "Browsing Costs",
     "description": "Productivity tools to help user not go to waste-of-time sites.",
-    "version": "0.1",
+    "version": "0.1.1",
     "icons": {
         "16": "icons/icon16.png",
         "48": "icons/icon48.png",
@@ -14,7 +14,7 @@
         "default_title": "Add site as expense"
     },
     "background": {
-        "scripts": ["shared.js", "background/trackSpending.js"],
+        "scripts": ["area.js", "shared.js", "background.js"],
         "persistent": false
     },
     "options_ui": {
@@ -24,9 +24,11 @@
     "content_scripts": [
         {
             "matches": ["*://*/*"],
+            "css": ["content.css"],
             "js": [
                 "lib/react-15.1.0.js",
                 "lib/react-dom-15.1.0.js",
+                "area.js",
                 "content.js"
             ],
             "run_at": "document_start"

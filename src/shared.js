@@ -43,19 +43,26 @@ const shared = (() => {
         });
     };
 
-    const host = function (url) {
-        const pathArray = url.split('/');
-        const host = pathArray[2];
-        return host;
-    };
-
     return {
+        get (keys, callback) {
+            initialize(() => {
+                chrome.storage.sync.get(keys, callback);
+            });
+        },
+        onChanged (callback) {
+            chrome.storage.onChanged.addListener((changes, areaName) => {
+                if (areaName !== 'sync') {
+                    return;
+                }
+                callback(changes);
+            });
+        },
         newSite (siteUrl, callback) {
             if (!callback) {
                 callback = () => null;
             }
 
-            this.get(localKeys, (items) => {
+            shared.get(localKeys, (items) => {
                 const exists = items.premiumSites.some((site) => {
                     return site.url === siteUrl;
                 });
@@ -69,12 +76,15 @@ const shared = (() => {
                 let updatedSites = items.premiumSites.slice();
                 updatedSites.push({id: siteId, url: siteUrl});
 
-                chrome.storage.sync.set({premiumSites: updatedSites});
+                items.premiumSites.push({
+                    id: siteId,
+                    url: siteUrl,
+                    minCost: 1
+                });
 
-                // TODO:
-                // This is a proof of implementation
-                // Remove/update with new money system
-                chrome.storage.sync.set({money: items.money + 1}, callback);
+                items.money += 1;
+
+                chrome.storage.sync.set(items, callback);
             });
         },
         removeSite (siteUrl, callback) {
@@ -82,7 +92,11 @@ const shared = (() => {
                 callback = () => null;
             }
 
-            this.get(localKeys, (items) => {
+            shared.get(localKeys, (items) => {
+                if (items.money <= 0) {
+                    return;
+                }
+
                 const removeIndex =  items.premiumSites.findIndex((site) => {
                     return site.url === siteUrl;
                 });
@@ -91,36 +105,23 @@ const shared = (() => {
                     return callback();
                 }
 
-                let updatedSites = items.premiumSites.slice();
-                updatedSites.splice(removeIndex, 1);
+                items.premiumSites.splice(removeIndex, 1);
+                items.money -= 1;
 
-                chrome.storage.sync.set({premiumSites: updatedSites});
-
-                // TODO:
-                // This is a proof of implementation
-                // Remove/update with new money system
-                chrome.storage.sync.set({money: items.money - 1}, callback);
+                chrome.storage.sync.set(items, callback);
             });
         },
         isPremiumSite: function (url, callback) {
-            this.get('premiumSites', (items) => {
+            shared.get('premiumSites', (items) => {
+                let siteData;
                 const isPremiumSite = items.premiumSites.some((site) => {
-                    return site.url === host(url);
+                    if (site.url === area.host(url)) {
+                        siteData = site;
+                        return true;
+                    }
+                    return false;
                 });
-                callback(isPremiumSite);
-            });
-        },
-        get (keys, callback) {
-            initialize(() => {
-                chrome.storage.sync.get(keys, callback);
-            });
-        },
-        onChanged (callback) {
-            chrome.storage.onChanged.addListener((changes, areaName) => {
-                if (areaName !== 'sync') {
-                    return;
-                }
-                callback(changes);
+                callback(isPremiumSite, siteData);
             });
         },
         getCurrentTabHost (callback) {
@@ -137,23 +138,28 @@ const shared = (() => {
                     'tab.url should be a string'
                 );
 
-                callback(host(url));
+                callback(area.host(url));
             });
         },
-        paymentBlock () {
-            chrome.tabs.query({}, function (tabs) {
+        onBreak (url, callback) {
+            chrome.alarms.get(area.break(url), (alarm) => {
+                callback(alarm && alarm.scheduledTime - Date.now() > 1000);
+            });
+        },
+        lock () {
+            console.log('Lock');
+            chrome.tabs.query({}, (tabs) => {
                 tabs.forEach((tab) => {
                     shared.isPremiumSite(tab.url, (isPremiumSite) => {
-                        chrome.alarms.get('endBreak', (alarm) => {
-                            if (!isPremiumSite
-                                || (alarm
-                                    && alarm.scheduledTime - Date.now() > 1000
-                                )
-                            ) {
+                        if (!isPremiumSite) {
+                            return;
+                        }
+                        shared.onBreak(tab.url, (onBreak) => {
+                            if (onBreak) {
                                 return;
                             }
                             const message = {
-                                paymentBlock: true
+                                lock: true
                             };
                             chrome.tabs.sendMessage(tab.id, message);
                         });
@@ -161,18 +167,71 @@ const shared = (() => {
                 });
             });
         },
-        freeUrl () {
-            chrome.tabs.query({}, function (tabs) {
+        unlock () {
+            console.log('Unlock');
+            chrome.tabs.query({}, (tabs) => {
                 tabs.forEach((tab) => {
+                    const message = {
+                        unlock: true
+                    };
                     shared.isPremiumSite(tab.url, (isPremiumSite) => {
-                        const message = {
-                            freeUrl: true
-                        };
                         if (!isPremiumSite) {
-                            chrome.tabs.sendMessage(tab.id, message);
+                            return chrome.tabs.sendMessage(tab.id, message);
                         }
+                        shared.onBreak(tab.url, (onBreak) => {
+                            if (!onBreak) {
+                                return;
+                            }
+                            return chrome.tabs.sendMessage(tab.id, message);
+                        });
                     });
                 });
+            });
+        },
+        increment (siteUrl) {
+            shared.get(localKeys, (items) => {
+                const exists = items.premiumSites.some((site) => {
+                    if (site.url !== siteUrl) {
+                        return false;
+                    }
+
+                    site.minCost += 1;
+                    items.money += 1;
+                    return true;
+                });
+
+                if (!exists) {
+                    return;
+                }
+
+                chrome.storage.sync.set(items);
+            });
+        },
+        decrement (siteUrl) {
+            shared.get(localKeys, (items) => {
+                if (items.money <= 0) {
+                    return;
+                }
+
+                const exists = items.premiumSites.some((site) => {
+                    if (site.url !== siteUrl) {
+                        return false;
+                    }
+
+                    if (site.minCost <= 1) {
+                        return;
+                    }
+
+                    site.minCost -= 1;
+                    items.money -= 1;
+                    return true;
+                });
+
+                if (!exists) {
+                    return;
+                }
+
+                chrome.storage.sync.set(items);
             });
         }
     };
