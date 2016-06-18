@@ -93,20 +93,21 @@ const shared = (() => {
             }
 
             shared.get(localKeys, (items) => {
-                if (items.money <= 0) {
-                    return;
-                }
-
+                let siteState;
                 const removeIndex =  items.premiumSites.findIndex((site) => {
-                    return site.url === siteUrl;
+                    if (site.url === siteUrl) {
+                        siteState = site;
+                        return true;
+                    }
+                    return false;
                 });
 
-                if (removeIndex === -1) {
+                if (!siteState || items.money < siteState.minCost) {
                     return callback();
                 }
 
                 items.premiumSites.splice(removeIndex, 1);
-                items.money -= 1;
+                items.money -= siteState.minCost;
 
                 chrome.storage.sync.set(items, callback);
             });
