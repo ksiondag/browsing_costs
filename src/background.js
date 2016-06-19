@@ -41,6 +41,18 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     return true;
 });
 
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if (!request.earning) {
+        return false;
+    }
+
+    chrome.alarms.get('moneyIncrement', function (alarm) {
+        sendResponse({scheduledTime: alarm.scheduledTime});
+    });
+
+    return true;
+});
+
 chrome.runtime.onMessage.addListener(function (request, sender) {
     if (!request.cost) {
         return false;
@@ -130,3 +142,4 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
 
     return true;
 });
+

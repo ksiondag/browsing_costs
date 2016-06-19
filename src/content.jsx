@@ -4,12 +4,7 @@ const html = document.documentElement;
 html.style.visibility = 'hidden';
 
 const div = document.createElement('div');
-div.style.position = 'fixed';
-div.style.top = '0';
-div.style.left = '0';
-div.style.width = '100%';   
-div.style.height = '100%';
-div.style.backgroundColor = 'white';
+div.className = 'browsing-costs-box';
 
 const revealPaymentBox = function () {
     if (div.parentNode) {
@@ -84,7 +79,7 @@ const PaymentBox = React.createClass({
         return {
             url: area.host(window.location.href),
             cost: 1
-        }
+        };
     },
     componentDidMount () {
         chrome.runtime.sendMessage({siteState: true}, (response) => {
@@ -108,8 +103,34 @@ const PaymentBox = React.createClass({
     }
 });
 
+const TimerBox = React.createClass({
+    getInitialState () {
+        return {
+            scheduledTime: 0
+        };
+    },
+    componentDidMount () {
+        chrome.runtime.sendMessage({earning: true}, (response) => {
+            if (!response) {
+                return;
+            }
+            this.setState(response);
+        });
+    },
+    render () {
+        return (
+            <div>
+                Gain next currency at: {new Date(this.state.scheduledTime).toLocaleTimeString()}
+            </div>
+        );
+    }
+});
+
 ReactDOM.render(
-    <PaymentBox />,
+    <div>
+        <PaymentBox />
+        <TimerBox />
+    </div>,
     div
 );
 
