@@ -29,6 +29,8 @@
                 "lib/react-15.1.0.js",
                 "lib/react-dom-15.1.0.js",
                 "area.js",
+                "timer/timer.js",
+                "timer/content.js",
                 "content.js"
             ],
             "run_at": "document_start"

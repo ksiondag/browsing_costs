@@ -103,33 +103,10 @@ const PaymentBox = React.createClass({
     }
 });
 
-const TimerBox = React.createClass({
-    getInitialState () {
-        return {
-            scheduledTime: 0
-        };
-    },
-    componentDidMount () {
-        chrome.runtime.sendMessage({earning: true}, (response) => {
-            if (!response) {
-                return;
-            }
-            this.setState(response);
-        });
-    },
-    render () {
-        return (
-            <div>
-                Gain next currency at: {new Date(this.state.scheduledTime).toLocaleTimeString()}
-            </div>
-        );
-    }
-});
-
 ReactDOM.render(
     <div>
         <PaymentBox />
-        <TimerBox />
+        <ContentTimer />
     </div>,
     div
 );

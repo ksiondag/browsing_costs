@@ -1,11 +1,15 @@
 'use strict';
 
+const MAX_INCREMENT_TIME = 8*60;
+const MIN_INCREMENT_TIME = 30;
+
 const shared = (() => {
     let id;
 
     const initialState = {
         'premiumSites': [],
-        'money': 0
+        'money': 0,
+        'incrementTime': MAX_INCREMENT_TIME
     };
 
     const localKeys = Object.keys(initialState);
