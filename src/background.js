@@ -139,20 +139,11 @@ const clearOrCreatePaymentAlarm = function () {
 };
 
 chrome.runtime.onInstalled.addListener(function () {
-    shared.get('premiumSites', (items) => {
-        items.premiumSites.forEach((site) => {
-            if (site.minCost === undefined) {
-                site.minCost = 1;
-            }
-        });
-
-        chrome.storage.sync.set(items, function () {
-            console.log(items);
-        });
+    update.version(function () {
+        // TODO: check all tabs for premium status
+        clearOrCreatePaymentAlarm();
     });
-
-    // TODO: check all tabs for premium status
-    clearOrCreatePaymentAlarm();
+                    
 });
 
 chrome.runtime.onStartup.addListener(function () {

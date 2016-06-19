@@ -9,7 +9,8 @@ const shared = (() => {
     const initialState = {
         'premiumSites': [],
         'money': 0,
-        'incrementTime': MAX_INCREMENT_TIME
+        'incrementTime': MAX_INCREMENT_TIME,
+        'version': '0.1'
     };
 
     const localKeys = Object.keys(initialState);
