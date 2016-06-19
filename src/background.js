@@ -1,8 +1,10 @@
 'use strict';
 
+// TODO: separate alarm listeners from const definitions
 const BREAK_TIME = 5;
 const BREAK_POSTFIX = 'EndBreak';
 
+// NOTE: variable present in test/test.js
 const CURRENCY_GAIN = 'moneyIncrement';
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {

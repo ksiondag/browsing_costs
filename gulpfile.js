@@ -9,13 +9,16 @@ gulp.task('default', () => {
         }))
         .pipe(gulp.dest('bin'));
 
-    gulp.src(['src/**/*.js'])
+    gulp.src(['src/**/*.js', '!src/test/**/*.js'])
         .pipe(gulp.dest('bin'));
 
     return gulp.src([
         'src/**/*.html',
+        '!src/test/**/*.html',
         'src/manifest.json',
-        'src/**/*.png', 'src/**/*.css'
+        'src/**/*.png',
+        'src/**/*.css',
+        '!src/test/**/*.css'
     ])
         .pipe(gulp.dest('bin'));
 });
@@ -27,12 +30,11 @@ gulp.task('test', () => {
         }))
         .pipe(gulp.dest('test_bin'));
 
-    gulp.src(['src/**/*.js', '!src/test/**/*.js'])
+    gulp.src(['src/**/*.js'])
         .pipe(gulp.dest('test_bin'));
 
     return gulp.src([
         'src/**/*.html',
-        '!src/test/**/*.html',
         'src/manifest.json',
         'src/**/*.png', 'src/**/*.css'
     ])
