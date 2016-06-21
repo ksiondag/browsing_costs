@@ -131,7 +131,6 @@ describe('Browsing Costs', function () {
         // second alarm is aprox 4 hours away
         // Good enough for now
 
-        this.timeout(2*60*1000);
         chrome.alarms.onAlarm.addListener(function (alarm) {
             if (alarm.name !== CURRENCY_GAIN) {
                 return false;
