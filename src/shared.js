@@ -78,13 +78,12 @@ const shared = (() => {
 
                 let siteId = id;
                 id += 1;
-                let updatedSites = items.premiumSites.slice();
-                updatedSites.push({id: siteId, url: siteUrl});
 
                 items.premiumSites.push({
                     id: siteId,
                     url: siteUrl,
-                    minCost: 1
+                    minCost: 1,
+                    multiplier: 1
                 });
 
                 items.money += 1;
@@ -153,7 +152,6 @@ const shared = (() => {
             });
         },
         lock () {
-            console.log('Lock');
             chrome.tabs.query({}, (tabs) => {
                 tabs.forEach((tab) => {
                     shared.isPremiumSite(tab.url, (isPremiumSite) => {
@@ -173,8 +171,11 @@ const shared = (() => {
                 });
             });
         },
-        unlock () {
-            console.log('Unlock');
+        unlock (callback) {
+            if (!callback) {
+                callback = () => null;
+            }
+
             chrome.tabs.query({}, (tabs) => {
                 tabs.forEach((tab) => {
                     const message = {
@@ -192,6 +193,7 @@ const shared = (() => {
                         });
                     });
                 });
+                callback();
             });
         },
         increment (siteUrl) {

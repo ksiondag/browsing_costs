@@ -34,7 +34,9 @@ describe('Browsing Costs', function () {
 
     beforeEach(function (done) {
         chrome.storage.sync.clear(() => {
-            done();
+            update.version(() => {
+                done();
+            });
         });
     });
 
@@ -86,11 +88,13 @@ describe('Browsing Costs', function () {
     });
 
     it('should automatically update to most-recent version', function (done) {
-        update.version(function () {
-            shared.get('version', (items) => {
-                catchError(done, function () {
-                    expect(items.version).to.equal('0.1.2');
-                    done();
+        chrome.storage.sync.clear(() => {
+            update.version(function () {
+                shared.get('version', (items) => {
+                    catchError(done, function () {
+                        expect(items.version).to.equal('0.1.2');
+                        done();
+                    });
                 });
             });
         });
@@ -131,17 +135,19 @@ describe('Browsing Costs', function () {
         // second alarm is aprox 4 hours away
         // Good enough for now
 
-        chrome.alarms.onAlarm.addListener(function (alarm) {
+        const alarmCheck = function (alarm) {
             if (alarm.name !== CURRENCY_GAIN) {
                 return false;
             }
+
+            chrome.alarms.onAlarm.removeListener(alarmCheck);
 
             setTimeout(() => {
                 chrome.alarms.get(alarm.name, (newAlarm) => {
                     let timeDiff = newAlarm.scheduledTime - alarm.scheduledTime;
                     const hours = 60*60*1000;
 
-                    catchError(done, function () {
+                    catchError(done, () => {
                         expect(timeDiff).to.be.within(3.9*hours, 4.1*hours);
                     });
                     done();
@@ -149,14 +155,69 @@ describe('Browsing Costs', function () {
             }, 100);
 
             return true;
-        });
+        };
 
-        update.version(() => {
-            chrome.alarms.create(CURRENCY_GAIN, {when: Date.now() + 500});
+        chrome.alarms.onAlarm.addListener(alarmCheck);
+
+        chrome.alarms.create(CURRENCY_GAIN, {when: Date.now() + 500});
+    });
+
+    it('break cost increases by multiples of min-cost', function (done) {
+        shared.newSite('example.com', () => {
+            chrome.runtime.sendMessage({cost: 1, url: 'example.com'}, () => {
+                chrome.runtime.sendMessage(
+                    {
+                        siteState: true,
+                        url: 'example.com'
+                    },
+                    (response) => {
+                        catchError(done, () => {
+                            expect(response.url).to.equal('example.com');
+                            expect(response.cost).to.equal(2);
+                            done();
+                        });
+                    }
+                );
+            });
         });
     });
 
-    it('breaks should increase by multiples of min-cost');
+    it('break cost decrases after currency gain', function (done) {
+        const alarmCheck = function (alarm) {
+            if (alarm.name !== CURRENCY_GAIN) {
+                return false;
+            }
+
+            console.log('Alarm hit.');
+
+            chrome.alarms.onAlarm.removeListener(alarmCheck);
+
+            setTimeout(() => {
+                shared.get('premiumSites', (items) => {
+                    const example = items.premiumSites[0];
+
+                    catchError(done, () => {
+                        expect(example.url).to.equal('example.com');
+                        expect(example.multiplier).to.equal(1);
+                        done();
+                    });
+                });
+            }, 100);
+
+            return true;
+        };
+
+        chrome.alarms.onAlarm.addListener(alarmCheck);
+
+        shared.newSite('example.com', () => {
+            console.log('example.com added');
+            chrome.runtime.sendMessage({cost: 1, url: 'example.com'}, () => {
+                console.log('Payment made');
+                chrome.alarms.create(CURRENCY_GAIN, {when: Date.now() + 500});
+            });
+        });
+
+    });
 
     it('should detect cheating');
 

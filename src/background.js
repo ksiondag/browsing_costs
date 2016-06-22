@@ -31,10 +31,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
     shared.get('premiumSites', (items) => {
         items.premiumSites.some((site) => {
-            if (area.host(sender.tab.url) === site.url) {
+            if (area.host(request.url || sender.tab.url) === site.url) {
                 sendResponse({
                     url: site.url,
-                    cost: site.minCost
+                    cost: site.minCost * site.multiplier
                 });
                 return true;
             }
@@ -89,23 +89,36 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     return true;
 });
 
-chrome.runtime.onMessage.addListener(function (request, sender) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (!request.cost) {
         return false;
     }
 
-    shared.get('money', (items) => {
+    shared.get(['money', 'premiumSites'], (items) => {
         if (items.money < request.cost) {
-            return;
+            return sendResponse();
         }
+
+        const isPremiumSite = items.premiumSites.some((site) => {
+            if (site.url === area.host(request.url || sender.tab.url)) {
+                site.multiplier += 1;
+                return true;
+            }
+            return false;
+        });
+
+        if (!isPremiumSite) {
+            return sendResponse();;
+        }
+
         items.money -= request.cost;
         chrome.storage.sync.set(items, function () {
             chrome.alarms.clear(CURRENCY_GAIN);
             chrome.alarms.create(
-                area.break(sender.tab.url),
+                area.break(request.url || sender.tab.url),
                 {delayInMinutes: BREAK_TIME}
             );
-            shared.unlock();
+            shared.unlock(sendResponse);
         });
     });
 
@@ -172,7 +185,7 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
         return false;
     }
 
-    shared.get(['money','incrementTime'], (items) => {
+    shared.get(['money','incrementTime', 'premiumSites'], (items) => {
         items.money += 1;
 
         if (items.incrementTime > MIN_INCREMENT_TIME) {
@@ -180,6 +193,15 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
         } else {
             items.incrementTime = MIN_INCREMENT_TIME;
         }
+
+        items.premiumSites.forEach((site) => {
+            if (site.multiplier === 1) {
+                return;
+            }
+
+            site.multiplier -= 1;
+            return;
+        });
 
         chrome.storage.sync.set(items);
 
