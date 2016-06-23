@@ -12,8 +12,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         return false;
     }
 
-    shared.isPremiumSite(sender.tab.url, (isPremiumSite) => {
-        shared.onBreak(sender.tab.url, (onBreak) => {
+    storage.isPremiumSite(sender.tab.url, (isPremiumSite) => {
+        storage.onBreak(sender.tab.url, (onBreak) => {
             sendResponse({
                 isPremiumSite: isPremiumSite,
                 onBreak: onBreak
@@ -29,7 +29,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         return false;
     }
 
-    shared.get('premiumSites', (items) => {
+    storage.get('premiumSites', (items) => {
         items.premiumSites.some((site) => {
             if (area.host(request.url || sender.tab.url) === site.url) {
                 sendResponse({
@@ -50,7 +50,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         return false;
     }
 
-    shared.get(['incrementTime', 'money'], (items) => {
+    storage.get(['incrementTime', 'money'], (items) => {
         chrome.alarms.getAll((alarms) => {
             alarms = alarms.filter((alarm) => {
                 if (alarm.scheduledTime >= Date.now()) {
@@ -58,8 +58,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 }
                 if (alarm.name === CURRENCY_GAIN) {
                     // TODO:
-                    // Need to calculate how much currency should have been
-                    // gained between now and last alarm
+                    // Call same functionality that CURRENCY_GAIN alarm
+                    // listener executes
                     while (alarm.scheduledTime < Date.now()) {
                         alarm.scheduledTime += items.incrementTime * 60 * 1000;
                         items.incrementTime /= 2;
@@ -69,7 +69,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                         }
                     }
 
-                    chrome.storage.sync.set(items, function () {
+                    storage.set(items, function () {
                         chrome.alarms.create(
                             alarm.name,
                             {when: alarm.scheduledTime}
@@ -94,7 +94,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         return false;
     }
 
-    shared.get(['money', 'premiumSites'], (items) => {
+    storage.get(['money', 'premiumSites'], (items) => {
         if (items.money < request.cost) {
             return sendResponse();
         }
@@ -112,13 +112,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         }
 
         items.money -= request.cost;
-        chrome.storage.sync.set(items, function () {
+        storage.set(items, function () {
             chrome.alarms.clear(CURRENCY_GAIN);
             chrome.alarms.create(
                 area.break(request.url || sender.tab.url),
                 {delayInMinutes: BREAK_TIME}
             );
-            shared.unlock(sendResponse);
+            storage.unlock(sendResponse);
         });
     });
 
@@ -137,7 +137,7 @@ const clearOrCreatePaymentAlarm = function () {
                     return;
                 }
 
-                shared.get('incrementTime', (items) => {
+                storage.get('incrementTime', (items) => {
                     chrome.alarms.create(
                         CURRENCY_GAIN,
                         {delayInMinutes: items.incrementTime}
@@ -147,7 +147,7 @@ const clearOrCreatePaymentAlarm = function () {
         } else {
             chrome.alarms.clear(CURRENCY_GAIN);
             // NOTE: Magic number set in two places
-            chrome.storage.sync.set({incrementTime: MAX_INCREMENT_TIME});
+            storage.set({incrementTime: MAX_INCREMENT_TIME});
         }
     });
 
@@ -173,7 +173,7 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
 
     const area = alarm.name.replace(BREAK_POSTFIX, '');
 
-    shared.lock();
+    storage.lock();
 
     clearOrCreatePaymentAlarm();
 
@@ -185,7 +185,7 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
         return false;
     }
 
-    shared.get(['money','incrementTime', 'premiumSites'], (items) => {
+    storage.get(['money','incrementTime', 'premiumSites'], (items) => {
         items.money += 1;
 
         if (items.incrementTime > MIN_INCREMENT_TIME) {
@@ -203,7 +203,7 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
             return;
         });
 
-        chrome.storage.sync.set(items);
+        storage.set(items);
 
         chrome.alarms.create(
             CURRENCY_GAIN,

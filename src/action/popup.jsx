@@ -2,7 +2,7 @@
 
 const AddBox = React.createClass({
     submitUrl () {
-        shared.newSite(this.props.url, shared.lock);
+        storage.newSite(this.props.url, storage.lock);
     },
     render () {
         return (
@@ -15,7 +15,7 @@ const AddBox = React.createClass({
 
 const RemoveBox = React.createClass({
     removeUrl () {
-        shared.removeSite(this.props.url, shared.unlock);
+        storage.removeSite(this.props.url, storage.unlock);
     },
     render () {
         return (
@@ -38,7 +38,7 @@ const SiteBox = React.createClass({
     setStateFromShared () {
         // TODO 2016/06/13 Silent Kat
         // This setup is hacky, I remove the protocol, need to add one
-        shared.isPremiumSite('fake://' + this.props.url, (isPremium, site) => {
+        storage.isPremiumSite('fake://' + this.props.url, (isPremium, site) => {
             let state = {
                 isPremiumSite: isPremium
             }
@@ -51,10 +51,10 @@ const SiteBox = React.createClass({
         });
     },
     componentDidMount () {
-        // Popup mounted. Fetching state from shared fetching
+        // Popup mounted. Fetching state from storage fetching
         this.setStateFromShared();
 
-        shared.onChanged(() => {
+        storage.onChanged(() => {
             // Local storage changes, updating popup render
             this.setStateFromShared();
         });
@@ -83,7 +83,7 @@ const SiteBox = React.createClass({
 // TODO: options link
 
 document.addEventListener('DOMContentLoaded', function () {
-    shared.getCurrentTabHost(function (url) {
+    storage.getCurrentTabHost(function (url) {
         ReactDOM.render(
             <SiteBox url={url} />,
             document.getElementById('container')

@@ -19,7 +19,7 @@ const catchError = function (done, callback) {
 
 describe('Browsing Costs', function () {
     before(function (done) {
-        shared.get(null, (items) => {
+        storage.get(null, (items) => {
             backup.items = items;
 
             chrome.alarms.getAll((alarms) => {
@@ -33,7 +33,7 @@ describe('Browsing Costs', function () {
     });
 
     beforeEach(function (done) {
-        chrome.storage.sync.clear(() => {
+        storage.clear(() => {
             update.version(() => {
                 done();
             });
@@ -41,15 +41,15 @@ describe('Browsing Costs', function () {
     });
 
     afterEach(function (done) {
-        chrome.storage.sync.clear(() => {
+        storage.clear(() => {
             done();
         });
     });
 
     after(function (done) {
         setTimeout(() => {
-            chrome.storage.sync.set(backup.items, () => {
-                shared.get(null, (items) => {
+            storage.set(backup.items, () => {
+                storage.get(null, (items) => {
                     
                     backup.alarms.forEach((alarm) => {
                         if (alarm.scheduledTime < Date.now()) {
@@ -87,10 +87,25 @@ describe('Browsing Costs', function () {
         }, 250);
     });
 
+    it('migrates storage to local when updating to 0.1.3', function (done) {
+        storage.clear(() => {
+            chrome.storage.sync.set({money: -100}, () => {
+                update.version(() => {
+                    chrome.storage.local.get(null, (items) => {
+                        catchError(done, () => {
+                            expect(items.money).to.equal(-100);
+                            chrome.storage.sync.clear(done);
+                        });
+                    });
+                });
+            });
+        });
+    });
+
     it('should automatically update to most-recent version', function (done) {
-        chrome.storage.sync.clear(() => {
+        storage.clear(() => {
             update.version(function () {
-                shared.get('version', (items) => {
+                storage.get('version', (items) => {
                     catchError(done, function () {
                         expect(items.version).to.equal('0.1.2');
                         done();
@@ -101,8 +116,8 @@ describe('Browsing Costs', function () {
     });
 
     it('adding sites should earn currency', function (done) {
-        shared.newSite('example.com', () => {
-            shared.get(null, (items) => {
+        storage.newSite('example.com', () => {
+            storage.get(null, (items) => {
                 catchError(done, function () {
                     expect(items.premiumSites[0].url).to.equal('example.com');
                     expect(items.money).to.equal(1);
@@ -113,9 +128,9 @@ describe('Browsing Costs', function () {
     });
 
     it('removing sites should cost currency', function (done) {
-        shared.newSite('example.com', () => {
-            shared.removeSite('example.com', () => {
-                shared.get(null, (items) => {
+        storage.newSite('example.com', () => {
+            storage.removeSite('example.com', () => {
+                storage.get(null, (items) => {
                     catchError(done, function () {
                         expect(items.premiumSites).to.have.lengthOf(0);
                         expect(items.money).to.equal(0);
@@ -163,7 +178,7 @@ describe('Browsing Costs', function () {
     });
 
     it('break cost increases by multiples of min-cost', function (done) {
-        shared.newSite('example.com', () => {
+        storage.newSite('example.com', () => {
             chrome.runtime.sendMessage({cost: 1, url: 'example.com'}, () => {
                 chrome.runtime.sendMessage(
                     {
@@ -188,12 +203,10 @@ describe('Browsing Costs', function () {
                 return false;
             }
 
-            console.log('Alarm hit.');
-
             chrome.alarms.onAlarm.removeListener(alarmCheck);
 
             setTimeout(() => {
-                shared.get('premiumSites', (items) => {
+                storage.get('premiumSites', (items) => {
                     const example = items.premiumSites[0];
 
                     catchError(done, () => {
@@ -209,7 +222,7 @@ describe('Browsing Costs', function () {
 
         chrome.alarms.onAlarm.addListener(alarmCheck);
 
-        shared.newSite('example.com', () => {
+        storage.newSite('example.com', () => {
             console.log('example.com added');
             chrome.runtime.sendMessage({cost: 1, url: 'example.com'}, () => {
                 console.log('Payment made');
@@ -219,9 +232,22 @@ describe('Browsing Costs', function () {
 
     });
 
+    // TODO: before closing issue1
+    it('should handle basic sync setup');
+
+    // issue14
+    it('should merge sync and local when sync changes');
+    it('should save alarms in storage for sync purposes');
+
+    it('should update browser icon badge when money changes');
+
+    // Someday/Maybe
     it('should detect cheating');
 
-    it('should sync only once per minute');
+    // TODO:
+    // A sanity-check for the alarm-based tests if this fails all other
+    // alarms-based tests will fail
+    it('alarms should be functional');
 
 });
 

@@ -14,7 +14,7 @@
         "default_title": "Add site as expense"
     },
     "background": {
-        "scripts": ["area.js", "shared.js", "update.js", "background.js"],
+        "scripts": ["area.js", "storage.js", "update.js", "background.js"],
         "persistent": false
     },
     "options_ui": {

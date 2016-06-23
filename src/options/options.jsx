@@ -2,10 +2,10 @@
 
 const SiteCost = React.createClass({
     decrement () {
-        shared.decrement(this.props.site.url);
+        storage.decrement(this.props.site.url);
     },
     increment () {
-        shared.increment(this.props.site.url);
+        storage.increment(this.props.site.url);
     },
     render () {
         return (
@@ -83,7 +83,7 @@ const SiteForm = React.createClass({
         this.setState({value: event.target.value});
     },
     submitUrl () {
-        shared.newSite(this.state.value);
+        storage.newSite(this.state.value);
         this.setState(this.getInitialState());
     },
     enterCheck (event) {
@@ -138,7 +138,7 @@ const OptionsBox = React.createClass({
         }
     },
     setStateFromShared () {
-        shared.get(null, (items) => {
+        storage.get(null, (items) => {
             Object.keys(items).filter(function (key) {
                 return ['premiumSites', 'money'].some(
                     (check) => check === key
@@ -149,10 +149,10 @@ const OptionsBox = React.createClass({
         });
     },
     componentDidMount () {
-        // Options mounted. Fetching state from shared fetching
+        // Options mounted. Fetching state from storage fetching
         this.setStateFromShared();
 
-        shared.onChanged(() => {
+        storage.onChanged(() => {
             // Local storage changes, updating options render
             this.setStateFromShared();
         });
