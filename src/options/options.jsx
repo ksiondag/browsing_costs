@@ -62,7 +62,7 @@ const SiteList = React.createClass({
         if (this.props.premiumSites) {
             sites = this.props.premiumSites.map(function (site) {
                 return (
-                    <PremiumSite key={site.id} site={site} />
+                    <PremiumSite key={site.url} site={site} />
                 );
             });
         }

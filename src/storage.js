@@ -8,24 +8,11 @@ const storage = (() => {
         'premiumSites': [],
         'money': 0,
         'incrementTime': MAX_INCREMENT_TIME,
-        'version': '0.1'
+        'version': '0.1',
+        'alarms': {}
     };
 
     const localKeys = Object.keys(initialState);
-
-    let id;
-    const initId = function (premiumSites, callback) {
-        if (!callback) {
-            callback = () => null;
-        }
-
-        if (premiumSites.length === 0) {
-            id = 1;
-            return callback();
-        }
-        id = premiumSites.slice(-1)[0].id + 1;
-        callback();
-    };
 
     const initialize = function (callback) {
         if (!callback) {
@@ -41,9 +28,7 @@ const storage = (() => {
                 items[key] = initialState[key];
                 initialize[key] = initialState[key];
             });
-            chrome.storage.local.set(initialize, function () {
-                initId(items.premiumSites, callback);
-            });
+            chrome.storage.local.set(initialize, callback);
         });
     };
 
@@ -82,11 +67,7 @@ const storage = (() => {
             return false;
         }
 
-        let siteId = id;
-        id += 1;
-
         items.premiumSites.push({
-            id: siteId,
             url: addUrl,
             minCost: 1,
             multiplier: 1

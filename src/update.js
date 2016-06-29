@@ -87,10 +87,14 @@ const update = (() => {
                 }
 
                 items.premiumSites.forEach((site) => {
+                    if (site.id) {
+                        delete site.id;
+                    }
                 });
 
                 items.version = '0.1.3';
 
+                console.log(items);
                 storage.set(items, function () {
                     console.log(items);
                     callback();
